@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>One Punch Gacha - Final Sound Fix</title>
+    <title>One Punch Gacha - Sound Final</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #050505; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
@@ -11,68 +11,72 @@
         .active { display: flex; }
         
         #sound-btn { 
-            position: fixed; top: 70px; right: 20px; z-index: 1000; 
-            background: #ff4757; color: white; padding: 12px 20px; 
-            border-radius: 50px; font-weight: 900; font-size: 11px; 
-            border: 2px solid rgba(255,255,255,0.3); transition: all 0.2s;
+            position: fixed; top: 20px; right: 20px; z-index: 1000; 
+            background: #ff4757; color: white; padding: 12px 24px; 
+            border-radius: 12px; font-weight: 900; font-size: 14px; 
+            border: none; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+            cursor: pointer; transition: all 0.3s;
         }
-        .btn-on { background: #2ed573 !important; box-shadow: 0 0 20px #2ed573; }
+        .btn-playing { background: #2ed573 !important; box-shadow: 0 4px 20px #2ed573 !important; transform: scale(1.05); }
 
-        /* Trik agar YouTube tidak memblokir suara */
-        #music-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 10px;
-            height: 10px;
-            opacity: 0.01; /* Nyaris tidak terlihat tapi tetap dianggap "ada" oleh browser */
-            pointer-events: none;
-            z-index: 1;
+        /* Wadah YouTube yang 'terlihat' sedikit agar tidak diblokir browser */
+        #music-box {
+            position: fixed; bottom: -50px; left: 0;
+            width: 100px; height: 100px; opacity: 0.01; pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <button id="sound-btn" onclick="playMusic()">🔇 START MUSIC</button>
+    <button id="sound-btn" onclick="initMusic()">🔇 NYALAKAN MUSIK</button>
     
-    <div id="music-container"></div>
+    <div id="music-box"></div>
 
-    <div class="fixed top-0 w-full h-14 flex items-center px-6 z-[110] bg-black/50 backdrop-blur-md">
-        <span class="text-yellow-400 font-bold">💎 5,000</span>
-    </div>
-
-    <section id="main-screen" class="screen active items-center justify-center">
-        <h1 class="text-4xl font-black italic mb-4">ONE PUNCH GAME</h1>
-        <p class="text-gray-400 text-sm">Tekan tombol merah di pojok untuk musik</p>
+    <section class="screen active items-center justify-center text-center p-6">
+        <h1 class="text-5xl font-extrabold italic mb-4 text-yellow-500">ONE PUNCH</h1>
+        <p class="text-gray-400 mb-8">Klik tombol merah di atas untuk memutar musik tema.</p>
+        
+        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 w-full max-w-xs">
+            <p class="text-sm opacity-50 mb-2">STATUS MUSIK:</p>
+            <p id="music-status" class="font-mono text-red-500 font-bold tracking-widest uppercase">Off / Terputus</p>
+        </div>
     </section>
 
     <script>
-        let musicPlaying = false;
-        const videoId = "SbBClQ7XLnj52VGr";
+        let isStarted = false;
+        // ID ini adalah Saitama Main Theme yang sudah teruji bisa di-embed
+        const trackId = "s3zNXAteh3Z0Nem"; 
 
-        function playMusic() {
-            const container = document.getElementById('music-container');
+        function initMusic() {
+            const box = document.getElementById('music-box');
             const btn = document.getElementById('sound-btn');
+            const status = document.getElementById('music-status');
 
-            if (!musicPlaying) {
-                // Masukkan Iframe dengan volume & autoplay paksa
-                container.innerHTML = `
+            if (!isStarted) {
+                // Paksa pembuatan iframe baru dengan parameter autoplay & unmute
+                box.innerHTML = `
                     <iframe 
-                        width="100" height="100" 
-                        src="https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}&mute=0" 
-                        allow="autoplay">
+                        id="yt-player"
+                        width="200" height="200" 
+                        src="https://www.youtube.com/embed/${trackId}?autoplay=1&loop=1&playlist=${trackId}&controls=0&mute=0" 
+                        allow="autoplay; encrypted-media">
                     </iframe>`;
                 
-                btn.innerHTML = "🔊 MUSIC ON";
-                btn.classList.add('btn-on');
-                musicPlaying = true;
-                console.log("Mencoba memutar musik...");
+                btn.innerHTML = "🔊 MUSIK AKTIF";
+                btn.classList.add('btn-playing');
+                status.innerText = "Berputar (Saitama Theme)";
+                status.style.color = "#2ed573";
+                isStarted = true;
+                
+                console.log("Mencoba memutar...");
             } else {
-                // Matikan
-                container.innerHTML = "";
-                btn.innerHTML = "🔇 START MUSIC";
-                btn.classList.remove('btn-on');
-                musicPlaying = false;
+                // Stop Musik
+                box.innerHTML = "";
+                btn.innerHTML = "🔇 NYALAKAN MUSIK";
+                btn.classList.remove('btn-playing');
+                status.innerText = "Off / Terputus";
+                status.style.color = "#ff4757";
+                isStarted = false;
             }
         }
     </script>
