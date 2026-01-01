@@ -3,137 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>One Punch Gacha - Sound Fixed</title>
+    <title>One Punch Gacha - Final Sound Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #050505; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; height: 100vh; }
-        .screen { display: none; height: 100vh; width: 100%; background-size: cover; background-position: center; flex-direction: column; padding-bottom: 90px; padding-top: 60px; }
+        .screen { display: none; height: 100vh; width: 100%; flex-direction: column; padding-top: 60px; }
         .active { display: flex; }
         
-        /* Tombol Suara Dinamis */
         #sound-btn { 
             position: fixed; top: 70px; right: 20px; z-index: 1000; 
-            background: #ef4444; color: white; padding: 10px 20px; 
-            border-radius: 50px; font-weight: 900; font-size: 12px; 
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); 
-            cursor: pointer; border: none; transition: all 0.3s ease;
+            background: #ff4757; color: white; padding: 12px 20px; 
+            border-radius: 50px; font-weight: 900; font-size: 11px; 
+            border: 2px solid rgba(255,255,255,0.3); transition: all 0.2s;
         }
-        #sound-btn.playing { 
-            background: #22c55e; 
-            box-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
-            transform: scale(0.9);
-        }
+        .btn-on { background: #2ed573 !important; box-shadow: 0 0 20px #2ed573; }
 
-        .nav-bar { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); width: 92%; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(10px); border-radius: 20px; display: flex; justify-content: space-around; padding: 12px; border: 1px solid rgba(255,255,255,0.1); z-index: 100; }
-        .nav-item { font-size: 10px; text-align: center; color: #666; cursor: pointer; }
-        .active-nav { color: #fbbf24; }
+        /* Trik agar YouTube tidak memblokir suara */
+        #music-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 10px;
+            height: 10px;
+            opacity: 0.01; /* Nyaris tidak terlihat tapi tetap dianggap "ada" oleh browser */
+            pointer-events: none;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
 
-    <button id="sound-btn" onclick="handleMusicClick()">🔇 CLICK TO PLAY MUSIC</button>
+    <button id="sound-btn" onclick="playMusic()">🔇 START MUSIC</button>
     
-    <div id="player-container" style="position:absolute; top:-999px; left:-999px;">
-        <div id="player"></div>
+    <div id="music-container"></div>
+
+    <div class="fixed top-0 w-full h-14 flex items-center px-6 z-[110] bg-black/50 backdrop-blur-md">
+        <span class="text-yellow-400 font-bold">💎 5,000</span>
     </div>
 
-    <div class="fixed top-0 w-full h-14 flex justify-between items-center px-6 z-[110] bg-gradient-to-b from-black to-transparent">
-        <div class="flex items-center gap-2">
-            <span class="text-xl">💎</span>
-            <span id="diamond-count" class="font-bold text-yellow-400">5000</span>
-        </div>
-    </div>
-
-    <section id="profile-screen" class="screen active px-6">
-        <h2 class="text-3xl font-black italic mb-4">COLLECTION</h2>
-        <p class="opacity-50 text-xs">Pilih hero untuk bertarung di Arena</p>
+    <section id="main-screen" class="screen active items-center justify-center">
+        <h1 class="text-4xl font-black italic mb-4">ONE PUNCH GAME</h1>
+        <p class="text-gray-400 text-sm">Tekan tombol merah di pojok untuk musik</p>
     </section>
-
-    <section id="gacha-screen" class="screen items-center justify-center px-6 text-center">
-        <h1 class="text-5xl font-black mb-12 italic">SUMMON</h1>
-        <button onclick="alert('Gacha Berhasil!')" class="w-64 bg-yellow-500 text-black py-4 rounded-xl font-black text-xs">PULL HERO</button>
-    </section>
-
-    <div class="nav-bar">
-        <div onclick="showScreen('profile-screen', this)" class="nav-item active-nav"><div>👤</div><div>HEROES</div></div>
-        <div onclick="showScreen('gacha-screen', this)" class="nav-item"><div>🌀</div><div>SUMMON</div></div>
-    </div>
 
     <script>
-        // 1. YouTube Player API Setup
-        var tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        let musicPlaying = false;
+        const videoId = "SbBClQ7XLnj52VGr";
 
-        var player;
-        var musicStarted = false;
-
-        function onYouTubeIframeAPIReady() {
-            player = new YT.Player('player', {
-                height: '1',
-                width: '1',
-                videoId: 'SbBClQ7XLnj52VGr', 
-                playerVars: {
-                    'autoplay': 0,
-                    'loop': 1,
-                    'playlist': 'SbBClQ7XLnj52VGr',
-                    'controls': 0,
-                    'showinfo': 0,
-                    'modestbranding': 1
-                },
-                events: {
-                    'onReady': onPlayerReady
-                }
-            });
-        }
-
-        function onPlayerReady(event) {
-            console.log("Music Engine Ready");
-        }
-
-        // 2. Fungsi Klik & Perubahan Warna
-        function handleMusicClick() {
+        function playMusic() {
+            const container = document.getElementById('music-container');
             const btn = document.getElementById('sound-btn');
-            
-            if (!musicStarted) {
-                if (player && typeof player.playVideo === 'function') {
-                    player.unMute();
-                    player.setVolume(100);
-                    player.playVideo();
-                    
-                    // Ubah Warna & Teks
-                    btn.classList.add('playing');
-                    btn.innerHTML = "🔊 MUSIC ON (LOOP)";
-                    musicStarted = true;
-                    
-                    // Beri feedback visual tambahan
-                    console.log("Memulai musik: SbBClQ7XLnj52VGr");
-                } else {
-                    alert("Sedang memuat musik, tunggu 2 detik lalu coba lagi.");
-                }
-            } else {
-                // Toggle Pause/Play jika sudah pernah nyala
-                const state = player.getPlayerState();
-                if (state == 1) { // 1 = Playing
-                    player.pauseVideo();
-                    btn.innerHTML = "🔇 MUSIC PAUSED";
-                    btn.style.background = "#666";
-                } else {
-                    player.playVideo();
-                    btn.innerHTML = "🔊 MUSIC ON (LOOP)";
-                    btn.style.background = "#22c55e";
-                }
-            }
-        }
 
-        // 3. Sistem Pindah Halaman (Musik Tidak Mati)
-        function showScreen(id, el) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active-nav'));
-            document.getElementById(id).classList.add('active');
-            el.classList.add('active-nav');
+            if (!musicPlaying) {
+                // Masukkan Iframe dengan volume & autoplay paksa
+                container.innerHTML = `
+                    <iframe 
+                        width="100" height="100" 
+                        src="https://www.youtube.com/embed/${videoId}?autoplay=1&loop=1&playlist=${videoId}&mute=0" 
+                        allow="autoplay">
+                    </iframe>`;
+                
+                btn.innerHTML = "🔊 MUSIC ON";
+                btn.classList.add('btn-on');
+                musicPlaying = true;
+                console.log("Mencoba memutar musik...");
+            } else {
+                // Matikan
+                container.innerHTML = "";
+                btn.innerHTML = "🔇 START MUSIC";
+                btn.classList.remove('btn-on');
+                musicPlaying = false;
+            }
         }
     </script>
 </body>
-  </html>
+</html>
